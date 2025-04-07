@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数字谱演奏器</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/tone@15.0.4/build/Tone.js"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <!-- 标题区域 -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800 mb-2">数字谱演奏器</h1>
+      <p class="text-gray-600">基于 Tone.js 的简易数字乐谱演奏工具</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+      <!-- 主界面 -->
+      <div class="md:flex">
+        <!-- 左侧乐谱输入区 -->
+        <div class="md:w-1/2 p-6 border-r border-gray-200">
+          <div class="mb-4">
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">乐谱输入</h2>
+            <div class="bg-gray-50 rounded-lg p-2 text-sm text-gray-500 mb-2">
+              <p>格式说明：使用 <span class="font-mono">音高-时长</span> 表示每个音符</p>
+              <p>音高：1-7 对应 C-B，0 表示休止符，·1 表示高八度，~1 表示低八度</p>
+              <p>时长：以 0.25 秒为基本单位，如 2 表示 0.5 秒，4 表示 1 秒</p>
+              <p>和弦：使用反斜杠 \ 连接同时播放的音符，如 <span class="font-mono">1-4\·1-2\~1-2</span></p>
+              <p>例如：<span class="font-mono">1-2 0-2 ·1-1 ~1-3 1-4\3-4\5-4</span></p>
+            </div>
+          </div>
+          <textarea id="score" class="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none font-mono text-gray-700">
+BPM:120
+1-2 1-2 5-2 5-2 6-2 6-2 5-3 0-1
+4-2 4-2 3-2 3-2 2-2 2-2 1-3 0-1
+5-2 5-2 4-2 4-2 3-2 3-2 2-3 0-1
+5-2 5-2 4-2 4-2 3-2 3-2 2-3 0-1
+1-2 1-2 5-2 5-2 6-2 6-2 5-3 0-1
+4-2 4-2 3-2 3-2 2-2 2-2 1-3 0-1
+          </textarea>
+        </div>
+
+        <!-- 右侧控制和可视化区 -->
+        <div class="md:w-1/2 p-6">
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">播放控制</h2>
+            <div class="flex space-x-3">
+              <button id="play"
+                class="flex items-center justify-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors">
+                <i class="fas fa-play mr-2"></i> 播放
+              </button>
+              <button id="reset"
+                class="flex items-center justify-center px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-colors">
+                <i class="fas fa-undo mr-2"></i> 重置
+              </button>
+              <button id="save"
+                class="flex items-center justify-center px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-colors">
+                <i class="fas fa-file-audio mr-2"></i> 导出音频
+              </button>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">音色设置</h2>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="instrument" class="block text-sm font-medium text-gray-700 mb-1">乐器</label>
+                <select id="instrument"
+                  class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="piano">钢琴</option>
+                  <option value="guitar">吉他</option>
+                  <option value="guzheng">古筝</option>
+                  <option value="flute">长笛</option>
+                  <option value="violin">小提琴</option>
+                  <option value="xylophone">木琴</option>
+                  <option value="custom">自定义乐器</option>
+                </select>
+              </div>
+              <div>
+                <label for="volume" class="block text-sm font-medium text-gray-700 mb-1">音量</label>
+                <input type="range" id="volume" min="0" max="1" step="0.01" value="0.7" class="w-full">
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+              <h2 class="text-xl font-semibold text-gray-700">音色参数调整</h2>
+              <button id="toggle-params" class="text-sm text-blue-500 hover:text-blue-700 focus:outline-none">
+                <i class="fas fa-sliders-h mr-1"></i> 显示参数
+              </button>
+            </div>
+            
+            <div id="params-panel" class="params-panel-hidden bg-gray-50 rounded-lg border border-gray-200">
+              <!-- 基本参数 -->
+              <div class="mb-4">
+                <h3 class="font-medium text-gray-700 mb-2">基本参数</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label for="synth-type" class="block text-sm font-medium text-gray-700 mb-1">合成器类型</label>
+                    <select id="synth-type" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="Synth">基础合成器 (Synth)</option>
+                      <option value="AMSynth">振幅调制合成器 (AMSynth)</option>
+                      <option value="FMSynth">频率调制合成器 (FMSynth)</option>
+                      <option value="PluckSynth">拨弦合成器 (PluckSynth)</option>
+                      <option value="MetalSynth">金属合成器 (MetalSynth)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="oscillator-type" class="block text-sm font-medium text-gray-700 mb-1">波形类型</label>
+                    <select id="oscillator-type" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="sine">正弦波 (sine)</option>
+                      <option value="triangle">三角波 (triangle)</option>
+                      <option value="square">方波 (square)</option>
+                      <option value="sawtooth">锯齿波 (sawtooth)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 包络参数 -->
+              <div class="mb-4">
+                <h3 class="font-medium text-gray-700 mb-2">包络参数</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label for="attack" class="block text-sm font-medium text-gray-700 mb-1">起音时间 (Attack): <span id="attack-value">0.01</span>s</label>
+                    <input type="range" id="attack" min="0.001" max="2" step="0.001" value="0.01" class="w-full">
+                  </div>
+                  <div>
+                    <label for="decay" class="block text-sm font-medium text-gray-700 mb-1">衰减时间 (Decay): <span id="decay-value">0.5</span>s</label>
+                    <input type="range" id="decay" min="0.001" max="5" step="0.001" value="0.5" class="w-full">
+                  </div>
+                  <div>
+                    <label for="sustain" class="block text-sm font-medium text-gray-700 mb-1">延音音量 (Sustain): <span id="sustain-value">0.3</span></label>
+                    <input type="range" id="sustain" min="0" max="1" step="0.01" value="0.3" class="w-full">
+                  </div>
+                  <div>
+                    <label for="release" class="block text-sm font-medium text-gray-700 mb-1">释放时间 (Release): <span id="release-value">1.0</span>s</label>
+                    <input type="range" id="release" min="0.001" max="10" step="0.001" value="1.0" class="w-full">
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 调制参数 (针对 AM/FM 合成器) -->
+              <div id="modulation-params" class="mb-4">
+                <h3 class="font-medium text-gray-700 mb-2">调制参数</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label for="harmonicity" class="block text-sm font-medium text-gray-700 mb-1">谐波比 (Harmonicity): <span id="harmonicity-value">1.0</span></label>
+                    <input type="range" id="harmonicity" min="0.1" max="10" step="0.1" value="1.0" class="w-full">
+                  </div>
+                  <div id="modulation-index-container">
+                    <label for="modulation-index" class="block text-sm font-medium text-gray-700 mb-1">调制指数 (Mod Index): <span id="modulation-index-value">5</span></label>
+                    <input type="range" id="modulation-index" min="0.1" max="50" step="0.1" value="5" class="w-full">
+                  </div>
+                  <div>
+                    <label for="modulation-type" class="block text-sm font-medium text-gray-700 mb-1">调制波形</label>
+                    <select id="modulation-type" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="sine">正弦波 (sine)</option>
+                      <option value="triangle">三角波 (triangle)</option>
+                      <option value="square">方波 (square)</option>
+                      <option value="sawtooth">锯齿波 (sawtooth)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 效果参数 -->
+              <div class="mb-4">
+                <h3 class="font-medium text-gray-700 mb-2">效果参数</h3>
+                <div class="grid grid-cols-3 gap-4">
+                  <div>
+                    <label for="eq-low" class="block text-sm font-medium text-gray-700 mb-1">低频 (Low): <span id="eq-low-value">0</span>dB</label>
+                    <input type="range" id="eq-low" min="-12" max="12" step="1" value="0" class="w-full">
+                  </div>
+                  <div>
+                    <label for="eq-mid" class="block text-sm font-medium text-gray-700 mb-1">中频 (Mid): <span id="eq-mid-value">0</span>dB</label>
+                    <input type="range" id="eq-mid" min="-12" max="12" step="1" value="0" class="w-full">
+                  </div>
+                  <div>
+                    <label for="eq-high" class="block text-sm font-medium text-gray-700 mb-1">高频 (High): <span id="eq-high-value">0</span>dB</label>
+                    <input type="range" id="eq-high" min="-12" max="12" step="1" value="0" class="w-full">
+                  </div>
+                  <div>
+                    <label for="reverb-decay" class="block text-sm font-medium text-gray-700 mb-1">混响衰减 (Reverb): <span id="reverb-decay-value">1.2</span>s</label>
+                    <input type="range" id="reverb-decay" min="0.1" max="10" step="0.1" value="1.2" class="w-full">
+                  </div>
+                  <div>
+                    <label for="reverb-wet" class="block text-sm font-medium text-gray-700 mb-1">混响湿度 (Wet): <span id="reverb-wet-value">0.15</span></label>
+                    <input type="range" id="reverb-wet" min="0" max="1" step="0.01" value="0.15" class="w-full">
+                  </div>
+                </div>
+              </div>
+              
+              <!-- 应用按钮 -->
+              <div class="flex justify-end">
+                <button id="reset-params" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 transition-colors mr-2">
+                  重置参数
+                </button>
+                <button id="apply-params" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors">
+                  应用参数
+                </button>
+              </div>
+            </div>
+
+            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200" id="custom-instrument-panel">
+              <h3 class="font-medium text-gray-700 mb-2">自定义乐器</h3>
+              <div class="grid grid-cols-2 gap-4 mb-3">
+                <div>
+                  <label for="custom-name" class="block text-sm font-medium text-gray-700 mb-1">乐器名称</label>
+                  <input type="text" id="custom-name" placeholder="输入自定义乐器名称" 
+                    class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div class="flex items-end">
+                  <button id="save-custom" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transition-colors">
+                    <i class="fas fa-save mr-1"></i> 保存乐器
+                  </button>
+                </div>
+              </div>
+              <div id="saved-instruments" class="mt-2">
+                <p class="text-sm text-gray-500 mb-2">已保存的乐器:</p>
+                <div id="saved-instruments-list" class="flex flex-wrap gap-2">
+                  <!-- 已保存的乐器将在这里动态显示 -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">当前播放</h2>
+            <div id="visualizer"
+              class="bg-gray-50 rounded-lg p-4 h-32 flex items-center justify-center border border-gray-200">
+              <div id="current-note" class="text-4xl font-bold text-blue-500">-</div>
+            </div>
+            <div class="mt-4 flex justify-between text-sm text-gray-500">
+              <div id="current-time">00:00</div>
+              <div id="total-time">00:00</div>
+            </div>
+            <div class="mt-2 bg-gray-200 rounded-full h-2">
+              <div id="progress-bar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部信息 -->
+    <div class="mt-8 text-center text-gray-500 text-sm">
+      <p>© 2023 数字谱演奏器 | 使用 Tone.js 构建</p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

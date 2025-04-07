@@ -1,0 +1,169 @@
+/* 自定义样式 */
+body {
+  background-color: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+}
+
+/* macOS 风格按钮 */
+button {
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* 自定义滑块样式 */
+input[type="range"] {
+  -webkit-appearance: none;
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  outline: none;
+  transition: background-color 0.2s;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* 动画效果 */
+@keyframes noteHighlight {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.note-highlight {
+  animation: note-pulse 0.3s ease-in-out;
+}
+
+@keyframes note-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* 可视化区域样式 */
+#visualizer {
+  background: linear-gradient(to right, #f0f4f8, #e6f0f9);
+  transition: background-color 0.3s ease;
+}
+
+#current-note {
+  transition: all 0.2s ease;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 和弦高亮样式 */
+.chord-highlight {
+  animation: chord-glow 0.5s ease-in-out;
+  text-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+}
+
+@keyframes chord-glow {
+  0% { text-shadow: 0 0 5px rgba(72, 187, 120, 0.3); }
+  50% { text-shadow: 0 0 15px rgba(72, 187, 120, 0.7); }
+  100% { text-shadow: 0 0 5px rgba(72, 187, 120, 0.3); }
+}
+
+/* 当前播放音符容器样式 */
+#visualizer:has(.chord-highlight) {
+  background-color: rgba(72, 187, 120, 0.05);
+}
+
+#visualizer:has(.note-highlight) {
+  background-color: rgba(66, 153, 225, 0.05);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .md\:flex {
+    flex-direction: column;
+  }
+  
+  .md\: w-1\/2 {
+    width: 100%;
+  }
+}
+
+/* 参数面板样式 */
+#params-panel {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.params-panel-hidden {
+  max-height: 0;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  border: none !important;
+}
+
+.params-panel-visible {
+  max-height: 1000px;
+  opacity: 1;
+  padding: 1rem;
+}
+
+/* 参数组标题 */
+#params-panel h3 {
+  position: relative;
+  padding-left: 12px;
+}
+
+#params-panel h3::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 16px;
+  background-color: #3b82f6;
+  border-radius: 2px;
+}
+
+/* 自定义乐器面板样式 */
+#custom-instrument-panel {
+  border-left: 3px solid #3b82f6;
+  transition: all 0.3s ease;
+}
+
+#saved-instruments-list {
+  max-height: 100px;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 4px;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+#saved-instruments-list button {
+  margin-bottom: 4px;
+}
+
+#saved-instruments-list button span[data-name] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-weight: bold;
+} 
